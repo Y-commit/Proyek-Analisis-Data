@@ -1,0 +1,22 @@
+Terdapat 4 kriteria utama yang harus Anda penuhi dalam mengerjakan proyek akhir ini.
+Kriteria 1: Menggunakan Salah Satu dari Dataset yang Telah Disediakan
+
+Pada proyek ini, Anda harus melakukan proses analisis menggunakan salah satu dari beberapa dataset berikut.
+
+    Bike Sharing Dataset (Sumber)
+    E-Commerce Public Dataset (Sumber)
+    Air Quality Dataset (Sumber)
+
+Kriteria 2: Melakukan Seluruh Proses Analisis Data
+
+Mirip seperti berbagai materi latihan yang telah dibahas sebelumnya, Anda harus melakukan seluruh proses analisis data mulai dari mendefinisikan pertanyaan hingga membuat kesimpulan dari hasil analisis. Selain itu, proyek analisis data yang Anda buat harus memenuhi ketentuan berikut.
+
+    Minimal terdapat 2 buah pertanyaan bisnis (pertanyaan analisis) yang ingin dijawab melalui proses analisis data. Pertanyaan tersebut haruslah efektif sesuai dengan materi Mendefinisikan Pertanyaan Untuk Explorasi Data.
+    Minimal terdapat 2 buah visualisasi data untuk menjawab pertanyaan bisnis yang telah dibuat.
+
+Kriteria 3: Proses Analisis Dibuat dalam Notebook yang Rapi
+
+Pada submission ini, Anda harus mengerjakan proyek analisis data menggunakan templat proyek yang telah disediakan. Tujuannya supaya proyek yang dibuat terdokumentasi dengan rapi. Templat yang dimaksud dapat diakses pada tautan berikut: templat notebook.
+Kriteria 4: Membuat Dashboard Sederhana Menggunakan Streamlit
+
+Setelah melakukan proses analisis, selanjutnya Anda wajib membuat dashboard sebagai media untuk menyampaikan hasil analisis data secara interaktif. Pada proyek ini, Anda dapat membuat dashboard dengan streamlit mirip seperti materi latihan sebelumnya. Selain itu, pastikan bahwa dashboard Anda buat dapat berjalan dengan lancar di local.
