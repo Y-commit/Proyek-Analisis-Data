@@ -1,5 +1,5 @@
 ## GOOGLE DRIVE LINK FOR ZIP FILE
-https://drive.google.com/file/d/1L3HPn5JDtXmmCJ6_X0MbIF_PqAzB3dic/view?usp=sharing
+https://drive.google.com/file/d/1uFuxX_edpJ32phg2yeD731hMHvoLjqpK/view?usp=sharing
 
 ## FOR DASBOARD
 
