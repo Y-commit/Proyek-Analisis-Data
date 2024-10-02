@@ -1,3 +1,6 @@
+## GOOGLE DRIVE LINK FOR ZIP FILE
+https://drive.google.com/file/d/1L3HPn5JDtXmmCJ6_X0MbIF_PqAzB3dic/view?usp=sharing
+
 ## FOR DASBOARD
 
 ## python version 3.12.6
