@@ -2,4 +2,4 @@ Pandas version: 2.2.3
 Matplotlib version: 3.9.2
 Seaborn version: 0.13.2
 Streamlit version: 1.38.0
-Python version: 3.12.6 (tags/v3.12.6:a4a2d2b, Sep 6 2024, 20:11:23) [MSC v. 1940 64 bit (AMD64)]
+Python version: 3.12.6 
