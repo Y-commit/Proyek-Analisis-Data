@@ -1,5 +1,9 @@
+
+FOR DASBOARD
 Pandas version: 2.2.3
 Matplotlib version: 3.9.2
 Seaborn version: 0.13.2
 Streamlit version: 1.38.0
 Python version: 3.12.6 
+
+FOR NOTEBOOK:
