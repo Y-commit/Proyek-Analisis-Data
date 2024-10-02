@@ -7,3 +7,13 @@ Streamlit version: 1.38.0
 Python version: 3.12.6 
 
 FOR NOTEBOOK:
+Numpy: For numerical operations and handling arrays.
+Pandas: For data manipulation and analysis, particularly with DataFrames.
+Matplotlib: For creating static, animated, and interactive visualizations in Python.
+Matplotlib Image: Specifically for handling image files.
+OS: For interacting with the operating system, likely for file handling.
+Scipy: Particularly the stats module for statistical functions.
+Seaborn: For statistical data visualization, built on top of Matplotlib.
+Google Colab Drive: To interact with files stored in Google Drive when using Google Colab.
+
+recoment using google colab for NOTEBOOK
