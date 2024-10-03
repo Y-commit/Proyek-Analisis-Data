@@ -18,3 +18,6 @@ https://drive.google.com/drive/folders/1au4aMBWl14gbTgQ_wCefZrS-15ipPxmz?usp=sha
 ## IF IT WONT RUN 
 youtube link for set up the environment
 https://youtu.be/zHAM5MGehV8?si=cWloR3e7qmavIGxK 
+
+## FOR WEB BASE
+https://mscbb5oeszqmiwzuzkpsxx.streamlit.app/
