@@ -3,6 +3,7 @@ Pandas==2.2.3
 Matplotlib==3.9.2
 Seaborn==0.13.2
 Streamlit==1.38.0
+scipy==2.1
 
 
 
