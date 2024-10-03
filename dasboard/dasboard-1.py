@@ -1,20 +1,110 @@
+import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
 import matplotlib.image as mpimg
 import seaborn as sns
-import streamlit as st
 import urllib
 
-# Set seaborn style
+
 sns.set(style='dark')
 
-# Set github file csv
-# split data for better management
-git_main ="https://raw.githubusercontent.com/Y-commit/for-dicoding/dashboard/dasboard/main.csv"
-git_geo  ="https://raw.githubusercontent.com/Y-commit/for-dicoding/dashboard/dasboard/geo.csv"
+
+git_main = "https://raw.githubusercontent.com/Y-commit/for-dicoding/dashboard/dasboard/main.csv"
+git_geo = "https://raw.githubusercontent.com/Y-commit/for-dicoding/dashboard/dasboard/geo.csv"
+
+data_url = "https://raw.githubusercontent.com/Y-commit/for-dicoding/dashboard/dasboard/main.csv"
+data = pd.read_csv(data_url)
 
 
-# Define the DataAnalyzer class
+st.subheader("Data Preview")
+st.write(data.head())
+
+
+order = data[['order_id', 'customer_id', 'customer_state']]
+payment = data[['order_id', 'payment_value']]
+customer = data[['customer_id', 'customer_unique_id']]
+
+pay_ord = order.merge(payment, on='order_id', how='outer').merge(customer, on='customer_id', how='outer')
+
+
+customer_spent = pay_ord.groupby('customer_unique_id')['payment_value'].sum().sort_values(ascending=False)
+
+customer_mean = customer_spent.mean()
+customer_std = stats.sem(customer_spent)
+
+confidence_interval = stats.t.interval(0.95, loc=customer_mean, scale=customer_std, df=len(customer_spent) - 1)
+
+
+customer_regions = pay_ord.groupby('customer_state').agg({'payment_value': [np.mean, np.std], 'customer_unique_id': 'count'})
+customer_regions.reset_index(inplace=True)
+
+
+cis = stats.t.interval(
+    0.95,
+    loc=customer_regions['payment_value']['mean'],
+    scale=customer_regions['payment_value']['std'] / np.sqrt(customer_regions['customer_unique_id']['count']),
+    df=customer_regions['customer_unique_id']['count'] - 1
+)
+
+customer_regions['ci_low'] = cis[0]
+customer_regions['ci_hi'] = cis[1]
+
+
+class Plotter:
+    def __init__(self, data):
+        self.data = data
+
+    def default_plot(self, ax, spines):
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.get_xaxis().tick_bottom()
+        ax.get_yaxis().tick_left()
+
+        ax.get_yaxis().set_tick_params(direction='out')
+        ax.get_xaxis().set_tick_params(direction='out')
+
+        for loc, spine in ax.spines.items():
+            if loc in spines:
+                spine.set_position(('outward', 10))
+
+        if 'left' in spines:
+            ax.yaxis.set_ticks_position('left')
+
+        if 'right' in spines:
+            ax.yaxis.set_ticks_position('right')
+
+        if 'bottom' in spines:
+            ax.xaxis.set_ticks_position('bottom')
+
+        return ax
+
+    def create_plot(self):
+        sorted_data = self.data.sort_values(by=('payment_value', 'mean'))
+        fig, ax = plt.subplots(figsize=(12, 4))
+        ax = self.default_plot(ax, ['left', 'bottom'])
+        plt.xticks(rotation=30)
+        plt.xlabel('State')
+        plt.ylabel('Mean Transaction (95% CI)')
+        plt.xlim(-0.5, len(sorted_data) - 0.5)
+        plt.ylim(sorted_data['payment_value']['mean'].min() - 10, sorted_data['payment_value']['mean'].max() + 10)
+
+        ax.scatter(sorted_data['customer_state'], sorted_data['payment_value']['mean'], s=100, c=sorted_data['payment_value']['mean'], cmap='viridis')
+        ax.vlines(sorted_data['customer_state'], sorted_data['ci_low'], sorted_data['ci_hi'], lw=.5)
+        plt.tight_layout()
+
+        return fig
+
+
+plotter = Plotter(customer_regions)
+fig = plotter.create_plot()
+
+
+st.subheader("Mean Transaction Values with 95% Confidence Intervals by State")
+st.pyplot(fig)
+
+
 class DataAnalyzer:
     def __init__(self, df):
         self.df = df
@@ -29,9 +119,9 @@ class DataAnalyzer:
             "order_id": "order_count",
             "payment_value": "revenue"
         }, inplace=True)
-        
+
         return daily_orders_df
-    
+
     def create_sum_spend_df(self):
         sum_spend_df = self.df.resample(rule='D', on='order_approved_at').agg({
             "payment_value": "sum"
@@ -74,7 +164,7 @@ class DataAnalyzer:
 
         return order_status_df, most_common_status
 
-# Define the BrazilMapPlotter class for map plotting functionality
+
 class BrazilMapPlotter:
     def __init__(self, data, plt, mpimg, urllib, st):
         self.data = data
@@ -90,29 +180,29 @@ class BrazilMapPlotter:
         self.plt.imshow(brazil, extent=[-73.98283055, -33.8, -33.75116944, 5.4])
         self.st.pyplot()
 
-# Load datasets
+
 datetime_cols = [
-    "order_approved_at", "order_delivered_carrier_date", 
-    "order_delivered_customer_date", "order_estimated_delivery_date", 
+    "order_approved_at", "order_delivered_carrier_date",
+    "order_delivered_customer_date", "order_estimated_delivery_date",
     "order_purchase_timestamp", "shipping_limit_date"
 ]
 all_df = pd.read_csv(git_main)
 all_df.sort_values(by="order_approved_at", inplace=True)
 all_df.reset_index(inplace=True)
 
-# Geolocation Dataset
+
 geolocation = pd.read_csv(git_geo)
 data = geolocation.drop_duplicates(subset='customer_unique_id')
 
-# Convert date columns to datetime
+
 for col in datetime_cols:
     all_df[col] = pd.to_datetime(all_df[col])
 
-# Get date range for filtering
+
 min_date = all_df["order_approved_at"].min()
 max_date = all_df["order_approved_at"].max()
 
-# Sidebar for selecting date range
+
 with st.sidebar:
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -121,8 +211,8 @@ with st.sidebar:
         st.image("https://i2.wp.com/genshinbuilds.aipurrjects.com/genshin/characters/ganyu/image.png?strip=all&quality=75&w=256", width=100)
     with col3:
         st.write(' ')
+ 
 
-    # Date Range
     start_date, end_date = st.date_input(
         label="Select Date Range",
         value=[min_date, max_date],
@@ -130,142 +220,38 @@ with st.sidebar:
         max_value=max_date
     )
 
-# Filter data by selected date range
+
 main_df = all_df[(all_df["order_approved_at"] >= pd.to_datetime(start_date)) & 
                  (all_df["order_approved_at"] <= pd.to_datetime(end_date))]
 
-# Instantiate DataAnalyzer class and call its methods
 function = DataAnalyzer(main_df)
 
 daily_orders_df = function.create_daily_orders_df()
 sum_spend_df = function.create_sum_spend_df()
 sum_order_items_df = function.create_sum_order_items_df()
-review_score, common_score = function.review_score_df()
-state, most_common_state = function.create_bystate_df()
-order_status, common_status = function.create_order_status()
+review_scores, most_common_score = function.review_score_df()
+bystate_df, most_common_state = function.create_bystate_df()
+order_status_df, most_common_status = function.create_order_status()
 
-# Instantiate BrazilMapPlotter for map plotting
-map_plot = BrazilMapPlotter(data, plt, mpimg, urllib, st)
 
-# Define Streamlit app UI
-st.title("DICODING E-Commerce Public Data Analysis")
-st.write("for ecomerce public data")
+st.subheader("Daily Orders and Revenue")
+st.line_chart(daily_orders_df.set_index("order_approved_at"))
 
-# Plot daily orders delivered
-st.subheader("Order Daily Delivered")
-col1, col2 = st.columns(2)
+st.subheader("Total Spend Over Time")
+st.line_chart(sum_spend_df.set_index("order_approved_at"))
 
-with col1:
-    total_order = daily_orders_df["order_count"].sum()
-    st.markdown(f"Order in total: **{total_order}**")
+st.subheader("Product Count by Category")
+st.bar_chart(sum_order_items_df.set_index("product_category_name_english")["product_count"])
 
-with col2:
-    total_revenue = daily_orders_df["revenue"].sum()
-    st.markdown(f"Revenue in total: **{total_revenue}**")
+st.subheader("Review Score Distribution")
+st.bar_chart(review_scores)
 
-fig, ax = plt.subplots(figsize=(12, 6))
-sns.lineplot(x=daily_orders_df["order_approved_at"], y=daily_orders_df["order_count"], marker="o", linewidth=2, color="#90CAF9")
-ax.tick_params(axis="x", rotation=45)
-ax.tick_params(axis="y", labelsize=15)
-st.pyplot(fig)
+st.subheader("Customer Count by State")
+st.bar_chart(bystate_df.set_index("customer_state")["customer_count"])
 
-# Plot customer spend money
-st.subheader("Spend Money by Customer")
-col1, col2 = st.columns(2)
+st.subheader("Order Status Distribution")
+st.bar_chart(order_status_df)
 
-with col1:
-    total_spend = sum_spend_df["total_spend"].sum()
-    st.markdown(f"Total Spend: **{total_spend}**")
 
-with col2:
-    avg_spend = sum_spend_df["total_spend"].mean()
-    st.markdown(f"Average Spend: **{avg_spend:.2f}**")
-
-fig, ax = plt.subplots(figsize=(12, 6))
-sns.lineplot(data=sum_spend_df, x="order_approved_at", y="total_spend", marker="o", linewidth=2, color="#90CAF9")
-ax.tick_params(axis="x", rotation=45)
-ax.tick_params(axis="y", labelsize=15)
-st.pyplot(fig)
-
-# Order items plot (updated section)
-st.subheader("Order Items")
-col1, col2 = st.columns(2)
-
-with col1:
-    total_items = sum_order_items_df["product_count"].sum()
-    st.markdown(f"Total Items: **{total_items}**")
-
-with col2:
-    avg_items = sum_order_items_df["product_count"].mean()
-    st.markdown(f"Average Items: **{avg_items:.2f}**")
-
-fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(45, 25))
-
-# Most sold products
-sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.head(5), palette="viridis", ax=ax[0])
-ax[0].set_ylabel(None)
-ax[0].set_xlabel("Number of Sales", fontsize=80)
-ax[0].set_title("Most Sold Products", loc="center", fontsize=90)
-ax[0].tick_params(axis='y', labelsize=55)
-ax[0].tick_params(axis='x', labelsize=50)
-
-# Fewest products sold
-sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.sort_values(by="product_count", ascending=True).head(5), palette="viridis", ax=ax[1])
-ax[1].set_ylabel(None)
-ax[1].set_xlabel("Number of Sales", fontsize=80)
-ax[1].invert_xaxis()
-ax[1].yaxis.set_label_position("right")
-ax[1].set_title("Fewest Sold Products", loc="center", fontsize=90)
-ax[1].tick_params(axis='y', labelsize=55)
-ax[1].tick_params(axis='x', labelsize=50)
-
-st.pyplot(fig)
-
-# Review scores plot
-st.subheader("Review Score")
-col1, col2 = st.columns(2)
-
-with col1:
-    avg_review_score = review_score.mean()
-    st.markdown(f"Average Review Score: **{avg_review_score:.2f}**")
-
-with col2:
-    most_common_review_score = review_score.idxmax()
-    st.markdown(f"Most Common Review Score: **{most_common_review_score}**")
-
-fig, ax = plt.subplots(figsize=(12, 6))
-colors = sns.color_palette("viridis", len(review_score))
-
-sns.barplot(x=review_score.index,
-            y=review_score.values,
-            order=review_score.index,
-            palette=colors)
-
-plt.title("Customer Review Scores for Service", fontsize=15)
-plt.xlabel("Rating")
-plt.ylabel("Count")
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-st.pyplot(fig)
-
-# Customer distribution by state plot
-st.subheader("Customer Distribution by State")
-fig, ax = plt.subplots(figsize=(12, 6))
-sns.barplot(x=state["customer_state"], y=state["customer_count"], ax=ax, palette='magma')
-ax.set_title("Customer Count by State", fontsize=20)
-ax.set_xlabel("State", fontsize=14)
-ax.set_ylabel("Customer Count", fontsize=14)
-st.pyplot(fig)
-
-# Order status plot
-st.subheader("Order Status")
-fig, ax = plt.subplots(figsize=(12, 6))
-order_status.plot(kind="bar", ax=ax, color='green')
-ax.set_title("Order Status Distribution", fontsize=20)
-ax.set_xlabel("Order Status", fontsize=14)
-ax.set_ylabel("Frequency", fontsize=14)
-st.pyplot(fig)
-
-# Plot Brazil map with customer geolocation
-st.subheader("Customer Geolocation in Brazil")
-map_plot.plot()
+brazil_map_plotter = BrazilMapPlotter(data, plt, mpimg, urllib, st)
+brazil_map_plotter.plot()
